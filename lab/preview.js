@@ -11,33 +11,6 @@
  */
 // eslint-disable-next-line import/no-cycle
 
-
-export function debug(...args) {
-  // eslint-disable-next-line no-console
-  console.debug.call(this, '[aem-experimentation]', ...args);
-}
-
-/**
- * Retrieves the content of metadata tags.
- * @param {String} name The metadata name (or property)
- * @returns {String} The metadata value(s)
- */
-export function getMetadata(name) {
-  const meta = [...document.head.querySelectorAll(`meta[name="${name}"]`)].map((m) => m.content).join(', ');
-  return meta || '';
-}
-
-/**
- * Sanitizes a name for use as class name.
- * @param {String} name The unsanitized name
- * @returns {String} The class name
- */
-export function toClassName(name) {
-  return typeof name === 'string'
-    ? name.toLowerCase().replace(/[^0-9a-z]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-    : '';
-}
-
 const DOMAIN_KEY_NAME = 'aem-domainkey';
 
 class AemExperimentationBar extends HTMLElement {
@@ -396,13 +369,11 @@ async function decorateExperimentPill({ el, config }, container, options) {
   if (!config) {
     return;
   }
-  if (options.isDebugEnabled) {
-    // eslint-disable-next-line no-console
-    debug('preview experiment', config.id);
-  }
+  // eslint-disable-next-line no-console
+  this.debug('preview experiment', config.id);
   const domainKey = window.localStorage.getItem(DOMAIN_KEY_NAME);
   const conversionName = (el.tagName === 'MAIN'
-    ? toClassName(getMetadata('conversion-name'))
+    ? this.toClassName(this.getMetadata('conversion-name'))
     : el.dataset.conversionName
   ) || 'click';
   const pill = createPopupButton(
@@ -461,7 +432,7 @@ async function decorateExperimentPill({ el, config }, container, options) {
     },
   );
   if (config.run) {
-    pill.classList.add(`is-${toClassName(config.status)}`);
+    pill.classList.add(`is-${this.toClassName(config.status)}`);
   }
   container.append(pill);
   const performanceMetrics = await fetchRumData(config.id, {
@@ -479,8 +450,8 @@ async function decorateExperimentPills(container, options) {
     return null;
   }
 
-  watchForAddedExperiences(ns.experiments, (c) => decorateExperimentPill(c, container, options));
-  return Promise.all(ns.experiments.map((c) => decorateExperimentPill(c, container, options)));
+  watchForAddedExperiences(ns.experiments, (c) => decorateExperimentPill.call(this, c, container, options));
+  return Promise.all(ns.experiments.map((c) => decorateExperimentPill.call(this, c, container, options)));
 }
 
 function createCampaign(campaign, isSelected, options) {
@@ -628,7 +599,7 @@ export default async function decoratePreviewMode(document, options) {
 
     await decorateAudiencesPills(overlay, options);
     await decorateCampaignPills(overlay, options);
-    await decorateExperimentPills(overlay, options);
+    await decorateExperimentPills.call(this, overlay, options);
   } catch (e) {
     // eslint-disable-next-line no-console
     console.log(e);
