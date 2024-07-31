@@ -11,11 +11,10 @@
  */
 // eslint-disable-next-line import/no-cycle
 
+
 export function debug(...args) {
-  if (isDebugEnabled) {
-    // eslint-disable-next-line no-console
-    console.debug.call(this, '[aem-experimentation]', ...args);
-  }
+  // eslint-disable-next-line no-console
+  console.debug.call(this, '[aem-experimentation]', ...args);
 }
 
 /**
@@ -397,9 +396,10 @@ async function decorateExperimentPill({ el, config }, container, options) {
   if (!config) {
     return;
   }
-  // eslint-disable-next-line no-console
-  debug('preview experiment', config.id);
-
+  if (options.isDebugEnabled) {
+    // eslint-disable-next-line no-console
+    debug('preview experiment', config.id);
+  }
   const domainKey = window.localStorage.getItem(DOMAIN_KEY_NAME);
   const conversionName = (el.tagName === 'MAIN'
     ? toClassName(getMetadata('conversion-name'))
